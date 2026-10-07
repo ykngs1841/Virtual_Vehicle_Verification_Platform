@@ -51,3 +51,8 @@
 4. 결과 검증
 5. 로그 기록
 6. 결과 출력
+
+## Version
+
+- V1.0 — PC 기반 Vehicle Simulation
+- V2.0 — STM32 기반 Embedded Vehicle Control (In Progress)
