@@ -1,0 +1,57 @@
+@startuml VVVP_SystemArchitecture_Ver2_0
+title VVVP V2.0 — 시스템 아키텍처 Level 1 (하드웨어 경계 초안)
+
+top to bottom direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+
+package "PC 시스템 경계" as PC {
+    component "차량 입력 및\n상태 모니터링" as PCInterface
+}
+
+package "NUCLEO-G0B1RE 개발보드\n(STM32 MCU에서 제어 SW 실행)" as NUCLEO {
+    component "입력 처리" as InputProcessing
+    component "EngineController" as EngineController
+    component "출력 처리" as OutputProcessing
+
+    label "입력 / 요청" as InputSignal
+    label "상태 / Failure Reason" as ResultSignal
+    InputProcessing -- InputSignal
+    InputSignal --> EngineController
+    EngineController -- ResultSignal
+    ResultSignal --> OutputProcessing
+}
+
+package "YuRobot Easy Module Shield\n(NUCLEO에 장착)" as Shield {
+    component "SW1 (D2)\nEngine Button 후보" as SW1 <<V2.0 목표>>
+    component "LED1 (D13)\nEngine State LED 후보" as LED1 <<V2.0 목표>>
+}
+
+label "UART" as UartSignal
+label "GPIO 입력" as ButtonSignal
+label "GPIO 출력" as LedSignal
+PCInterface <--> UartSignal
+UartSignal <--> NUCLEO
+SW1 -- ButtonSignal
+ButtonSignal -right-> InputProcessing
+OutputProcessing -- LedSignal
+LedSignal --> LED1
+
+legend bottom
+  EngineController: V1.0 Start/Stop 의미 재사용, GPIO 핀 비의존
+  UART/GPIO/LED: V2.0 구현 목표
+  Failure Reason 생성 책임 및 전달 인터페이스는 TBD
+  D2/D13: 실드 표기, 실제 GPIO 매핑・배선・전기적 구성 TBD
+  SW2 (D3), LED2 (D12): 예비 입출력
+endlegend
+
+' PC → STM32: Brake Position / Gear Position / Battery Voltage.
+' STM32 → PC: Engine State / Engine RPM / Failure Reason.
+' 입력 처리: UART 입력 해석 및 GPIO Engine Button 이벤트 전달.
+' 출력 처리: UART 결과 전달 및 Engine State에 따른 GPIO LED 표시.
+' label 요소는 연결선 설명을 배치하는 지점이며 시스템 구성요소가 아니다.
+
+@enduml
