@@ -1,0 +1,108 @@
+@startuml VVVP_SoftwareArchitecture_Ver2_0
+title VVVP V2.0 — Software Architecture Level 2
+
+top to bottom direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+skinparam nodesep 30
+skinparam ranksep 25
+
+component "PC\n외부 시스템" as PC
+component "YuRobot SW1\nEngine Button" as Button
+component "YuRobot LED1\nEngine State LED" as Led
+
+package "STM32 소프트웨어" as STM32 {
+  package "입력 처리\nV2.0 신규" as Input {
+    component "UART 입력 처리" as UartIn
+    component "GPIO 버튼 입력" as GpioIn
+    label "Brake / Gear" as DriverValues
+    label "Battery Voltage" as BatteryValue
+    label "Engine Button" as ButtonEvent
+    UartIn -[hidden]right-> GpioIn
+  }
+
+  package "Application Logic\nV1.0 재사용 기반" as Control {
+    component "DriverInput" as DriverInput
+    component "VehicleState" as VehicleState
+    component "EngineController" as EngineController
+    label "입력 / 요청" as ControlInput
+    label "상태 참조" as StateRead
+    label "상태 변경 (성공)" as StateWrite
+    DriverInput -[hidden]right-> VehicleState
+  }
+
+  package "출력 처리\nV2.0 신규" as Output {
+    component "제어 결과 경계" as ResultBoundary
+    component "UART 출력 처리" as UartOut
+    component "GPIO LED 출력" as GpioOut
+    label "제어 결과\nFailure Reason" as ControlResult
+    label "성공 / 실패 결과" as UartResult
+    label "Engine State\nEngine RPM" as UartState
+    label "Engine State" as LedState
+    UartOut -[hidden]right-> GpioOut
+  }
+
+  Input -[hidden]down-> Control
+  Control -[hidden]down-> Output
+
+  UartIn -- DriverValues
+  DriverValues --> DriverInput
+  UartIn -- BatteryValue
+  BatteryValue --> VehicleState
+  GpioIn -- ButtonEvent
+  ButtonEvent --> DriverInput
+
+  DriverInput -- ControlInput
+  ControlInput --> EngineController
+  VehicleState -- StateRead
+  StateRead --> EngineController
+  EngineController -- StateWrite
+  StateWrite --> VehicleState
+  EngineController -- ControlResult
+  ControlResult --> ResultBoundary
+  ResultBoundary -- UartResult
+  UartResult --> UartOut
+  VehicleState -- UartState
+  UartState --> UartOut
+  VehicleState -- LedState
+  LedState --> GpioOut
+}
+
+label "UART 입력" as PcInput
+label "UART 결과" as PcResult
+label "GPIO 입력" as GpioButtonSignal
+label "GPIO 출력" as GpioLedSignal
+PC -- PcInput
+PcInput --> UartIn
+UartOut -- PcResult
+PcResult --> PC
+Button -- GpioButtonSignal
+GpioButtonSignal --> GpioIn
+GpioOut -- GpioLedSignal
+GpioLedSignal --> Led
+
+legend bottom
+  V1.0: 실제 클래스의 재사용 기반
+  V2.0: 신규 구현 목표
+  제어 결과 경계: 인터페이스 미확정 설계 후보
+  Failure Reason 생성 책임 및 전달 인터페이스는 TBD
+  제어 실패 시 VehicleState 및 LED 유지
+endlegend
+
+' 표시만 축약하며 기존 책임과 데이터 흐름을 유지한다.
+' label 요소는 연결선 설명의 배치 지점이며 소프트웨어 구성요소가 아니다.
+' DriverInput: Brake Position, Gear Position, Engine Button Event 저장.
+' VehicleState: Battery Voltage(float), Engine State, Engine RPM 관리.
+' Battery Voltage 입력 저장은 0~15V로 제한하지 않는다.
+' EngineController: 저장 상태 참조, Start/Stop 판단, 성공 시 상태 변경.
+' Start: Brake > 0, Gear P/N, Battery 11.5~15.0V, Engine State OFF.
+' Stop: Brake > 0, Engine State ON. Gear/Battery를 사용하지 않는다.
+' 성공: 갱신된 Engine State/Engine RPM을 UART로 PC에 전달.
+' 실패: VehicleState와 LED 유지, Failure Reason을 UART로 PC에 전달.
+' 제어 결과/Failure Reason 전달은 V2.0 설계 목표이며 V1.0 구현 기능이 아니다.
+' UART 형식, GPIO 매핑, 디바운스, 숫자 예외 처리 및 결과 인터페이스는 TBD.
+
+@enduml
