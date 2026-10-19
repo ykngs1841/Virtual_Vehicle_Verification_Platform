@@ -55,4 +55,35 @@
 ## Version
 
 - V1.0 — PC 기반 Vehicle Simulation
-- V2.0 — STM32 기반 Embedded Vehicle Control (In Progress)
+- V2.0 — STM32 기반 Embedded Vehicle Control (구현 및 실물 검증 완료)
+
+V1.0은 PC에서 Engine Start/Stop 로직을 시뮬레이션하며, V2.0은 해당 C++ 로직을 재사용·확장하여 실제 STM32 보드의 UART 및 GPIO와 연동한다.
+
+### V2.0 Main Features
+
+- STM32 NUCLEO-G0B1RE 기반 엔진 제어
+- UART Interactive CLI를 통한 Brake/Gear/Battery 설정 및 차량 상태 조회
+- YuRobot Easy Module Shield V1의 SW1(PA10, Active Low) 버튼으로 Engine Start/Stop 요청
+- LED1(PA5, Active High)으로 실제 Engine State 표시
+- Start 조건: Brake > 0, Gear P/N, Battery 11.5~15.0V(양 끝값 포함). Stop 조건: Brake > 0
+- Battery 입력 저장은 0~15V로 제한하지 않으며, 제어 실패 시 기존 차량 상태와 엔진 상태 LED 유지
+- Start/Stop 실패 원인을 UART로 출력: `START_BRAKE`, `START_GEAR`, `START_BATTERY`, `STOP_BRAKE`
+
+### V2.0 Verification
+
+| 검증 구분 | 결과 |
+|---|---|
+| 호스트 자동 검사 | 최적화 설정 `/Od`, `/O2` 각각 331개 통과, 실패 0개 |
+| STM32 빌드 | Debug/Release 컴파일 및 링크 성공 |
+| 실제 STM32 보드 | 정상 Start/Stop, Brake/Gear/Battery 경계값 및 실패 조건 검증 성공 |
+| Failure Reason | 4종 실패 원인의 UART 출력 실물 검증 성공 |
+
+실제 보드 검증은 **사용자 수동 검증 결과**이며, 호스트 자동 검사와 구분한다.
+
+## Documents
+
+- [Version History](Version_History.md)
+- [Architecture](docs/Architecture.md) / [Class Diagram](UML/ClassDiagram.puml)
+- [V2.0 Use Case](docs/Use_Case_Ver2.0.md) / [IO List](docs/IO_List_Ver2.0.md)
+- [V2.0 System Requirement](docs/System_Requirement_Ver2.0.md) / [Software Requirement](docs/Software_Requirement_Ver2.0.md)
+- [V2.0 System Architecture](UML/SystemArchitecture_Ver2.0.puml) / [Software Architecture](UML/SoftwareArchitecture_Ver2.0.puml)
