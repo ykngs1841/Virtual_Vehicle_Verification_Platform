@@ -15,3 +15,21 @@ CMakeCache.txt
 
 # Visual Studio CMake
 CMakeSettings.json
+
+# STM32CubeIDE 빌드 결과물
+**/Debug/
+**/Release/
+
+# Eclipse / STM32CubeIDE 개인 작업 환경
+.metadata/
+**/.settings/
+
+# 자동 생성된 임시 파일
+*.launch
+*.log
+*.tmp
+*.bak
+
+# Windows
+Thumbs.db
+Desktop.ini
